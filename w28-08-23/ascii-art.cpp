@@ -9,7 +9,7 @@ int main() {
 		for (int j = 0; j < 40; j++) {
 			if (rand() % 5 == 0) {
 				printf("❤️ ");// extra space because emoji are double-wide
-				// printf("\u2764\uFE0F "); // unicode version i guess
+				// printf("\u2764\ufe0f "); // unicode version i guess
 			} else {
 				printf("  ");
 			}
