@@ -42,7 +42,7 @@ class Ball:
 		# backboard side collision
 		if (
 			self.vel.x > 0 
-			and self.pos.y + BALL_RADIUS > backboard.top + 10 # offset so it doesn't interfere with top collision
+			and self.pos.y + BALL_RADIUS > backboard.top + 5 # offset so it doesn't interfere with top collision
 			and self.pos.y - BALL_RADIUS < backboard.bottom
 			and self.pos.x + BALL_RADIUS > backboard.left # ┐
 			and self.pos.x - BALL_RADIUS < backboard.left # ┴ only collide with the side
@@ -54,7 +54,7 @@ class Ball:
 			self.vel.y > 0 
 			and self.pos.y + BALL_RADIUS > backboard.top # ┐
 			and self.pos.y - BALL_RADIUS < backboard.top # ┴ only collide with the top
-			and self.pos.x + BALL_RADIUS > backboard.left
+			and self.pos.x + BALL_RADIUS > backboard.left + 5
 			and self.pos.x - BALL_RADIUS < backboard.right
 		):
 			self.vel.y *= -1
@@ -70,15 +70,16 @@ class Ball:
 
 		# basket collision
 		if (
-			self.pos.y > basket.top #     ┐
-			and self.pos.y < basket.top # ┴ only collide with the top
+			self.pos.y > basket.top #         ┐
+			and self.pos.y < basket.top + 5 # ┴ only collide with the top
 			and self.pos.x > basket.left
 			and self.pos.x < basket.right
 		):
 			if self.vel.y > 0:
-				score += 1
-				print(score)
-				self.hasScored = True
+				if not self.hasScored:
+					score += 1
+					print(score)
+					self.hasScored = True
 			else:
 				self.vel.y *= -1
 		else:
@@ -95,13 +96,13 @@ class Ball:
 
 
 # setup
-ball = Ball(Vector2(200, 700))
+ball = Ball(Vector2(100, 700))
 screen = pygame.display.set_mode((400, 800))
 clock = pygame.time.Clock()
 backboard = Rect(380, 350, 10, 100)
-basket = Rect(330, 400, 50, 50)
-rim = Rect(325, 400, 5, 5)
-rim2 = Rect(325, 400, 55, 5) # only visual, not for collsion
+basket = Rect(325, 395, 55, 55)
+rim = Rect(320, 395, 5, 5)
+rim2 = Rect(320, 395, 60, 5) # only visual, not for collsion
 
 # main loop
 running = True
