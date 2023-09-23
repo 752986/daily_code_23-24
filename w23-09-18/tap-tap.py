@@ -5,8 +5,6 @@ from pygame.rect import Rect
 GRAVITY = 500
 BALL_RADIUS = 20
 
-#TODO: scoring is broken for some reason
-
 score = 0
 
 class Ball:
