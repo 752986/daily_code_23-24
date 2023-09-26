@@ -244,6 +244,8 @@ def main():
 				if event.key == pygame.K_SPACE:
 					current_color = (current_color + 1) % len(COLORS)
 					brush.color = COLORS[current_color]
+				elif event.key == pygame.K_s:
+					pygame.image.save(canvas, "saved_image.png")
 
 		# reduced draw rate for smoother strokes
 		if updated and pygame.time.get_ticks() - last_draw >= _FRAME_TIME:
