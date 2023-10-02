@@ -1,3 +1,7 @@
+/*
+* based on CSE390C Sample Midterm handout #3, problem #3
+*/
+
 #include <fstream>
 #include <istream>
 #include <iostream>
