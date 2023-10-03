@@ -8,6 +8,7 @@ import random
 # config:
 FRAMERATE = 60
 SCREEN_SIZE = Vector2(1200, 800)
+CENTER = SCREEN_SIZE / 2
 
 
 # pygame init:
@@ -34,10 +35,11 @@ class Turret(GameObject):
 	direction: float
 	timer: float
 
-	def __init__(self, pos: Vector2, fire_rate: float, turn_rate: float):
+	def __init__(self, pos: Vector2, fire_rate: float, turn_rate: float, cost: int):
 		super().__init__(pos)
 		self.fire_rate = 1 / fire_rate
 		self.turn_rate = turn_rate
+		self.cost = cost
 		self.direction = 0
 		self.timer = random.random() * self.fire_rate
 
@@ -58,16 +60,14 @@ class Turret(GameObject):
 		self.draw(surface)
 
 class BasicTurret(Turret):
-	cost = 0
-
 	def __init__(self, pos: Vector2):
-		super().__init__(pos, 2, 90)
+		super().__init__(pos, 0.5, 30, 0)
 
 	def draw(self, surface: Surface):
 		pygame.draw.line(surface, "#884444", self.pos, self.pos + Vector2(10, 0).rotate(self.direction))
 
 	def fire(self, gameobjects: list[GameObject]):
-		gameobjects.append(BasicProjectile(self.pos.copy(), 20, Vector2(10, 0).rotate(self.direction)))
+		gameobjects.append(BasicProjectile(self.pos.copy(), 50, Vector2(10, 0).rotate(self.direction)))
 
 	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
 		super().update(delta, gameobjects, surface)
@@ -75,32 +75,61 @@ class BasicTurret(Turret):
 		self.direction += self.turn_rate * delta
 
 
-
 class Enemy(GameObject):
 	health: int
+	vel: Vector2
+	size: float
+
+	def __init__(self, pos: Vector2, speed: float, size: float, health: int):
+		super().__init__(pos)
+		self.vel = (CENTER - self.pos).normalize() * speed
+		self.radius = size / 2
+		self.health = health
+
+	def draw(self, surface: Surface):
+		pass
+
+	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
+		self.pos += self.vel * delta
+
+		self.draw(surface)
+
+		if self.health <= 0:
+			gameobjects.remove(self)
+
+class Slime(Enemy):
+	def __init__(self, pos: Vector2):
+		super().__init__(pos, 20, 10, 5)
+
+	def draw(self, surface: Surface):
+		pygame.draw.rect(surface, "#88ff44", (self.pos - Vector2(5, 5), (10, 10)))
+
+	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
+		super().update(delta, gameobjects, surface)
 
 
 class Projectile(GameObject):
 	damage: int
-	radius: float
 	vel: Vector2
 	max_hits: int
 	hit_objs: list[Enemy]
 
-	def __init__(self, pos: Vector2, speed: float, direction: Vector2):
+	def __init__(self, pos: Vector2, speed: float, direction: Vector2, damage: int, max_hits: int):
 		super().__init__(pos)
 		self.vel = direction.normalize() * speed
+		self.damage = damage
+		self.max_hits = max_hits
 		self.hit_objs = []
 
 	def draw(self, surface: Surface):
 		pass
 
-	def checkCollision(self, gameobjects: list[GameObject]):
+	def checkCollision(self, gameobjects: list[GameObject]): # TODO: enemies check collisions
 		for obj in gameobjects:
 			if (
 				isinstance(obj, Enemy) 
 				and obj not in self.hit_objs 
-				and obj.pos.distance_to(self.pos) <= self.radius
+				and obj.pos.distance_to(self.pos) <= obj.radius
 			):
 				obj.health -= self.damage
 				self.hit_objs.append(obj)
@@ -108,29 +137,60 @@ class Projectile(GameObject):
 					gameobjects.remove(self)
 					break
 
-
 	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
 		self.pos += self.vel * delta
 		self.checkCollision(gameobjects)
+		if not Rect((0, 0), SCREEN_SIZE).collidepoint(self.pos):
+			gameobjects.remove(self)
 		self.draw(surface)
 
 class BasicProjectile(Projectile):
 	def __init__(self, pos: Vector2, speed: float, direction: Vector2):
-		super().__init__(pos, speed, direction)
-		self.damage = 5
-		self.radius = 10
-		self.max_hits = 1
+		super().__init__(pos, speed, direction, 5, 1)
 
 	def draw(self, surface: Surface):
-		pygame.draw.circle(surface, "#88aaff", self.pos, self.radius)
+		pygame.draw.circle(surface, "#88aaff", self.pos, 1)
 
+
+class Gamestate:
+	player_damage = 5
+	turret_level = 1
+	turret_speed = 1.0
+	enemy_level = 1
+
+class Manager(GameObject):
+	def __init__(self, pos: Vector2, state: Gamestate):
+		super().__init__(pos)
+		self.state = state
+
+class EnemySpawner(Manager):
+	pass
+
+class PlayerDamage(Manager):
+	def checkCollision(self, gameobjects: list[GameObject]):
+		for obj in gameobjects:
+			if (
+				isinstance(obj, Enemy)
+				and pygame.mouse.get_pressed()[0]
+				and obj.pos.distance_to(pygame.mouse.get_pos()) <= obj.radius
+			):
+				obj.health -= self.state.player_damage
+
+	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
+		self.checkCollision(gameobjects)
+	
 
 def main():
 	# game setup:
 	clock = pygame.time.Clock()
 
+	gamestate = Gamestate()
+
 	gameobjects: list[GameObject] = []
+	gameobjects.append(PlayerDamage(Vector2(0, 0), gamestate))
 	gameobjects.append(BasicTurret(SCREEN_SIZE / 2))
+	for _ in range(10): #TODO: replace with EnemySpawner
+		gameobjects.append(Slime(Vector2(random.random() * SCREEN_SIZE.x, random.random() * SCREEN_SIZE.y)))
 
 	# main loop:
 	running = True

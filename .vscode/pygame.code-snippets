@@ -27,7 +27,7 @@
 			"",
 			"# config:",
 			"FRAMERATE = ${1:60}",
-			"SCREEN_SIZE = (${2:1200}, ${3:800})",
+			"SCREEN_SIZE = Vector2(${2:1200}, ${3:800})",
 			"",
 			"",
 			"# pygame init:",
