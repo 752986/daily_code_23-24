@@ -83,8 +83,11 @@ class Enemy(GameObject):
 	def __init__(self, pos: Vector2, speed: float, size: float, health: int):
 		super().__init__(pos)
 		self.vel = (CENTER - self.pos).normalize() * speed
-		self.radius = size / 2
+		self.size = size
 		self.health = health
+
+	def getRect(self) -> Rect:
+		return Rect(self.pos, (self.size, self.size))
 
 	def draw(self, surface: Surface):
 		pass
@@ -102,7 +105,7 @@ class Slime(Enemy):
 		super().__init__(pos, 20, 10, 5)
 
 	def draw(self, surface: Surface):
-		pygame.draw.rect(surface, "#88ff44", (self.pos - Vector2(5, 5), (10, 10)))
+		pygame.draw.rect(surface, "#88ff44", self.getRect())
 
 	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
 		super().update(delta, gameobjects, surface)
@@ -129,7 +132,7 @@ class Projectile(GameObject):
 			if (
 				isinstance(obj, Enemy) 
 				and obj not in self.hit_objs 
-				and obj.pos.distance_to(self.pos) <= obj.radius
+				and obj.getRect().collidepoint(self.pos)
 			):
 				obj.health -= self.damage
 				self.hit_objs.append(obj)
@@ -171,13 +174,12 @@ class PlayerDamage(Manager):
 		for obj in gameobjects:
 			if (
 				isinstance(obj, Enemy)
-				and pygame.mouse.get_pressed()[0]
-				and obj.pos.distance_to(pygame.mouse.get_pos()) <= obj.radius
+				and obj.getRect().collidepoint(pygame.mouse.get_pos())
 			):
 				obj.health -= self.state.player_damage
 
 	def update(self, delta: float, gameobjects: list[GameObject], surface: Surface):
-		self.checkCollision(gameobjects)
+		pass
 	
 
 def main():
@@ -187,7 +189,8 @@ def main():
 	gamestate = Gamestate()
 
 	gameobjects: list[GameObject] = []
-	gameobjects.append(PlayerDamage(Vector2(0, 0), gamestate))
+	player = PlayerDamage(Vector2(0, 0), gamestate)
+	gameobjects.append(player)
 	gameobjects.append(BasicTurret(SCREEN_SIZE / 2))
 	for _ in range(10): #TODO: replace with EnemySpawner
 		gameobjects.append(Slime(Vector2(random.random() * SCREEN_SIZE.x, random.random() * SCREEN_SIZE.y)))
@@ -201,7 +204,8 @@ def main():
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				running = False
-
+			elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+				player.checkCollision(gameobjects)
 
 		# update:
 		screen.fill("#000000")
