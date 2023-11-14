@@ -20,10 +20,11 @@ def draw_tree(
 	vertex = topleft + ((horizontal + vertical) * 0.5)
 
 	# always draw its own square
-	color = int((1/(n + 1)) * 255)
+	color = int((1 - (1 / (n + 1))) ** 2.2 * 255)
 	pygame.gfxdraw.filled_polygon(surface, [bottomleft, topleft, topright, bottomright], (color, color, color))
 
-	pygame.display.flip()
+	if n > 5:
+		pygame.display.flip()
 
 	# if max depth hasn't been reached also draw the leaf squares
 	if n != 0:
@@ -47,7 +48,7 @@ def draw_tree(
 def main():
 	screen = pygame.display.set_mode((1000, 1000))
 
-	draw_tree(screen, Vector2(500, 500), Vector2(600, 500), 20)
+	draw_tree(screen, Vector2(600, 900), Vector2(1000, 900), 20)
 
 	pygame.display.flip()
 
