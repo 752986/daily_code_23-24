@@ -86,18 +86,6 @@ class Matrix3_3:
 			self.az * self.by * self.cx
 		)
 
-		# print(
-		# 	self.ax,
-		# 	self.ay,
-		# 	self.az,
-		# 	self.bx,
-		# 	self.by,
-		# 	self.bz,
-		# 	self.cx,
-		# 	self.cy,
-		# 	self.cz
-		# )
-
 		return Matrix3_3(
 			self.by * self.cz - self.bz * self.cy,
 			self.az * self.cy - self.ay * self.cz,
@@ -107,7 +95,7 @@ class Matrix3_3:
 			self.az * self.bx - self.ax * self.bz,
 			self.bx * self.cy - self.by * self.cx,
 			self.ay * self.cx - self.ax * self.cy,
-			self.ax * self.by - self.ay * self.bx,
+			self.ax * self.by - self.ay * self.bx
 		).scaled(determinant)
 
 class Camera:
@@ -123,11 +111,9 @@ class Camera:
 
 	def rotate(self, angle: Vector3):
 		self.facing.rotate_rad_ip(1, angle)
-		print(self.facing)
 
 	def rotate_y(self, angle: float):
-		self.facing.rotate_rad_ip(angle, Vector3(0, 1, 0))
-		print(self.facing)
+		self.facing.rotate_rad_ip(angle, Vector3(0, -1, 0))
 
 	def set_facing(self, facing: Vector3):
 		self.facing = facing.normalize()
@@ -135,8 +121,10 @@ class Camera:
 	def project(self, v: Vector3) -> Vector3:
 		'''Project a Vector3 into the camera's space'''
 		forward = self.facing
-		right = -forward.cross(Vector3(0, 1, 0))
-		up = -forward.cross(right)
+		right = forward.cross(Vector3(0, -1, 0)).normalize()
+		up = forward.cross(right)
+
+		# print(f"f{forward} r{right} u{up}")
 
 		matrix = Matrix3_3(right.x, right.y, right.z, up.x, up.y, up.z, forward.x, forward.y, forward.z)
 		
@@ -210,13 +198,13 @@ def main():
 			if keys[pygame.K_s]:
 				camera.pos.z -= 20
 			if keys[pygame.K_a]:
-				camera.pos.x -= 20
+				camera.pos.x -= 200
 			if keys[pygame.K_d]:
-				camera.pos.x += 20
+				camera.pos.x += 200
 			if keys[pygame.K_q]:
-				camera.pos.y -= 20
+				camera.pos.y -= 200
 			if keys[pygame.K_e]:
-				camera.pos.y += 20
+				camera.pos.y += 200
 
 		# rel = Vector2(pygame.mouse.get_rel())
 		# if rel != Vector2(0, 0):
